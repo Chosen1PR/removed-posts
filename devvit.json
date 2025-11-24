@@ -1,0 +1,7 @@
+{
+  "name": "sticky-archiver",
+  "blocks": {
+    "entry": "src/main.tsx",
+    "triggers": ["onModAction"]
+  }
+}
