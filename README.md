@@ -1,38 +1,26 @@
 ## Features
 
-Do you have scheduled megathreads in your community such as daily, weekly, or monthly discussion threads? Would you like to automate the locking of each one of those threads once a newer one replaces it?
+This app locks posts automatically when they are removed by a moderator. Additionally, mods can:
 
-This app locks pinned (stickied) posts, such as megathreads, automatically once they are unpinned and bumped off the subreddit highlights.
-
-- Enable or disable the app at will without needing to uninstall it.
-- Configure a list of flairs for posts that this app will automatically lock when unpinned.
-- Configure a list of title keywords for posts that this app will automatically lock when unpinned.
+- Enable or disable post locking at will without needing to uninstall the app.
+- Optionally unlock posts when they are approved by any mod.
+- Optionally ignore posts removed by AutoModerator.
+- Define a blocklist of mods. Posts removed by these mods will not be locked automatically.
+- Define an allowlist of mods (which overrides the blocklist) if only posts removed by certain mods should be locked.
 
 ---
 
 ## Changelog
 
-### [0.0.10] (2025-11-22)
+### [0.0.8] Initial Version (2025-12-01)
 
 #### Features
 
-- Added a proper link to the config settings from the subreddit-level menu item.
-- Migrated app to Devvit Web.
-
-### [0.0.9] (2025-08-01)
-
-#### Bug Fixes
-
-- Fixed a bug where the unpinned post was not being locked, even if it had a flair or title match in the config settings.
-
-### [0.0.8] Initial version (2025-07-06)
-
-#### Features
-
-- Lock pinned (stickied) posts automatically once they are unpinned and bumped off the subreddit highlights.
-- Enable or disable the app at will without needing to uninstall it.
-- Configure a list of flairs for posts that this app will automatically lock when unpinned.
-- Configure a list of title keywords for posts that this app will automatically lock when unpinned.
+- Enable or disable post locking at will without needing to uninstall the app.
+- Optionally unlock posts when they are approved by any mod.
+- Optionally ignore posts removed by AutoModerator.
+- Define a blocklist of mods. Posts removed by these mods will not be locked automatically.
+- Define an allowlist of mods (which overrides the blocklist) if only posts removed by certain mods should be locked.
 
 #### Bug Fixes
 

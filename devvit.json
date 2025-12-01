@@ -1,7 +1,12 @@
 {
-  "name": "sticky-archiver",
+  "name": "removed-posts",
   "blocks": {
     "entry": "src/main.tsx",
-    "triggers": ["onModAction"]
+    "triggers": [
+      "onModAction"
+    ]
+  },
+  "dev": {
+    "subreddit": "CapitalOneBank"
   }
 }

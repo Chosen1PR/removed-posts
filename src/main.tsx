@@ -5,7 +5,7 @@ import {
   //CommentDelete,
   Devvit,
   //MenuItemOnPressEvent,
-  Post,
+  //Post,
   //SettingScope,
   TriggerContext,
   //User,
@@ -18,130 +18,205 @@ Devvit.configure({
 
 
 Devvit.addSettings([
-  // Config setting for enabling thread archiving
+  // Config setting for post lock
   {
     type: "boolean",
-    name: "enable-archive",
-    label: "Turn on megathread archiving",
+    name: "enable-post-lock",
+    label: "Lock removed posts",
     defaultValue: true,
     helpText:
-      "If enabled, pinned posts will be locked when unpinned.",
+      "If enabled, posts will be locked automatically when they are removed.",
     scope: "installation",
   },
-  // Config setting for enabling locking of all pinned posts when unpinned
+  // Config setting for post unlock
   {
     type: "boolean",
-    name: "for-all-pinned",
-    label: "Turn on for all pinned posts",
+    name: "enable-post-unlock",
+    label: "Unlock approved posts",
     defaultValue: false,
     helpText:
-      "If enabled, all pinned posts will be locked when unpinned. If disabled, only posts with specific flairs or titles will be locked.",
+      "If enabled, posts will be unlocked automatically when they are approved by any mod/admin.",
     scope: "installation",
   },
-  // Config setting for list of flairs for posts that should be archived
-  {
-    type: "paragraph",
-    name: "archive-flair-list",
-    label: "Flair list",
+  // Config setting for comment lock
+  /*{
+    type: "boolean",
+    name: "enable-post-lock",
+    label: "Enable locking of removed posts",
+    defaultValue: true,
     helpText:
-      'Comma (,) delimited list of flairs (case-sensitive) for pinned posts you want to lock automatically when unpinned.' +
-      ' NOTE: The "Turn on for all pinned posts" setting overrides this.',
-    lineHeight: 3,
-    defaultValue: "",
+      "If enabled, removed posts will be locked automatically.",
     scope: "installation",
+  },*/
+  // Config setting for enabling locking of all pinned posts when unpinned
+  {
+    type: "group",
+    label: "Mod Settings",
+    helpText:
+      `Please omit any leading "u/" in the below settings (e.g., removed-posts, not u/removed-posts), ` +
+      `or leave blank to disable.`,
+    fields: [
+      // Config setting to ignore u/reddit
+      {
+        type: "boolean",
+        name: "ignore-ureddit",
+        label: "Ignore posts filtered by Reddit",
+        defaultValue: true,
+        helpText:
+          "If enabled, posts filtered or removed by u/reddit will not be locked.",
+        scope: "installation",
+      },
+      // Config setting to ignore automod
+      {
+        type: "boolean",
+        name: "ignore-automod",
+        label: "Ignore posts filtered/removed by AutoModerator",
+        defaultValue: true,
+        helpText:
+          "If enabled, posts filtered or removed by AutoModerator will not be locked.",
+        scope: "installation",
+      },
+      // Config setting to ignore admins
+      {
+        type: "boolean",
+        name: "ignore-admins",
+        label: "Ignore posts removed by Admins",
+        defaultValue: false,
+        helpText:
+          "If enabled, posts removed by site Admins will not be locked.",
+        scope: "installation",
+      },
+      // Config setting for list of blacklisted mods
+      {
+        type: "paragraph",
+        name: "mod-blacklist",
+        label: "Mod blocklist",
+        helpText:
+          `Comma (,) separated list of moderator usernames. Posts removed by these mods will be ignored. ` +
+          `This setting is ignored if the allowlist is not empty.`,
+        //lineHeight: 3,
+        defaultValue: "",
+        scope: "installation",
+      },
+      //Config setting for list of whitelisted mods
+      {
+        type: "paragraph",
+        name: "mod-whitelist",
+        label: "Mod allowlist",
+        helpText:
+          `Comma (,) separated list of moderator usernames. Only posts removed by these mods will be actioned. ` +
+          `Overrides the blocklist above.`,
+        //lineHeight: 3,
+        defaultValue: "",
+        scope: "installation",
+      }
+    ]
   },
-  //Config setting for list of post title keywords for posts that should be archived
-  {
-    type: "paragraph",
-    name: "archive-title-list",
-    label: "Title keyword/phrase list",
-    helpText:
-      'Comma (,) delimited list of keywords or phrases (case-sensitive) for titles of pinned posts you want to lock automatically when unpinned.' +
-      ' NOTE: The "Turn on for all pinned posts" setting overrides this.',
-    lineHeight: 3,
-    defaultValue: "",
-    scope: "installation",
-  }
 ]);
-
 
 // Button for config settings
 Devvit.addMenuItem({
-  label: "Pinned Post Archiver",
+  label: "Lock Removed Posts",
+  description: "Settings",
   location: "subreddit",
   forUserType: "moderator",
   onPress: async (event, context) => {
-    const subredditName = context.subredditName!;
-    context.ui.navigateTo(`https://developers.reddit.com/r/${subredditName}/apps/sticky-archiver`);
+    context.ui.navigateTo(`https://developers.reddit.com/r/${context.subredditName!}/apps/removed-posts`);
   },
 });
 
-// Trigger handler for when a mod action is performed on a post, specifically for when a post is unstickied.
+// Trigger handler for when a mod action is performed on a post
 Devvit.addTrigger({
   event: 'ModAction',
   onEvent: async (event, context) => {
-    //console.log(event.action + '\n' + event.targetPost?.title);
-    // Check if the mod action is a post unsticky and not a comment unsticky
-    if (event.action === 'unsticky') {
-      // Check if the app is enabled
-      const isEnabled = await context.settings.get("enable-archive")!;
-      if (!isEnabled)
-        return; // If the app is not enabled, do nothing
-      const commentId = event.targetComment?.id ?? '';
-      if (commentId !== '')
-        return; // If the event is a comment, do nothing
-      // Check if the for-all-pinned setting is enabled
-      const forAllPinned = await context.settings.get("for-all-pinned")!;
-      const postId = event.targetPost?.id!;
-      const thisPost = await context.reddit.getPostById(postId);
-      if (thisPost.locked) // If the post is already locked, do nothing
-        return;
-      //console.log(`A post was unstickied: and all the conditions are met`);
-      const flair = thisPost.flair?.text ?? '';
-      const title = thisPost.title!;
-      if (forAllPinned) // If the setting is enabled, lock all pinned posts when unpinned.
+    // Check if the mod action is a post removal.
+    if (event.action === 'removelink') {
+      // Check if the setting for post lock is enabled.
+      if (await context.settings.get("enable-post-lock")) {
+        if (event.targetPost?.isLocked!) return; // If the post is already locked, do nothing.
+        // Check mod username.
+        const modUsername = event.moderator?.name!;
+        const thisModIsIgnored = await modIsIgnored(modUsername, context);
+        if (thisModIsIgnored) return; // If this mod is ignored, do nothing.
+        // All conditions met. Proceed with post lock.
+        const thisPost = await context.reddit.getPostById(event.targetPost?.id!);
         thisPost.lock();
-      else if (flair != '') { // If the post has a flair, check if it matches the archive flair list
-        const flairListTemp = await context.settings.get("archive-flair-list") ?? '';
-        const flairList = flairListTemp.toString().trim();
-        if (flairList != '' && containsFlair(flair, flairList))
-          thisPost.lock(); // If the post has a flair that matches the archive flair list, lock it
+        //console.log('Is it locked?: ' + thisPost.isLocked().toString())
       }
-      if (!thisPost.locked) { // If the post has not already been locked, check if the title matches the archive title list
-        const titleListTemp = await context.settings.get("archive-title-list") ?? '';
-        const titleList = titleListTemp.toString().trim();
-        if (titleList != '' && containsTitle(title, titleList))
-          thisPost.lock(); // If the post title matches the archive title list, lock it
+    }
+    // Check if the mod action is a post approval.
+    else if (event.action === 'approvelink') {
+      // Check if the setting for post unlock is enabled.
+      if (await context.settings.get("enable-post-unlock")) {
+        if (!(event.targetPost?.isLocked!)) return; // If the post is already unlocked, do nothing.
+        // All conditions met. Proceed with post unlock.
+        const thisPost = await context.reddit.getPostById(event.targetPost?.id!);
+        thisPost.unlock();
       }
-      //console.log('Is it locked?: ' + thisPost.isLocked().toString())
     }
   }
 });
 
-// Helper function for verifying if post flair includes a flair in the list in the config settings
-function containsFlair(flair: string, flairList: string) {
-  flair = flair.trim(); //trim unneeded white space
-  var flairs = flairList.split(","); //separate words in list
-  for (let i = 0; i < flairs.length; i++) {
-    flairs[i] = flairs[i].trim(); //for each flair in the list, trim white space as well
-    if (flairs[i] == flair) //check if flair match
-      return true;
+// Helper function to determine if action by a certain mod is ignored
+async function modIsIgnored(modUsername: string, context: TriggerContext) {
+  // For invalid mod username, return true.
+  if (modUsername == undefined || modUsername == "")
+    return true;
+  // For posts filtered by Reddit, return the value of the app setting.
+  else if (modUsername == "reddit")
+    return (await context.settings.get("ignore-ureddit")) as boolean;
+  // For AutoModerator, return the value of the app setting.
+  else if (modUsername == "AutoModerator")
+    return (await context.settings.get("ignore-automod")) as boolean;
+  // Admin check
+  if (await context.settings.get("ignore-admins"))
+    // If the "ignore-admins" setting is on, return the output of the userIsAdmin method,
+    // which will tell us if the mod is an admin.
+    return (await userIsAdmin(modUsername, context));
+  // Base conditions satisfied.
+  var thisModIsIgnored = false;
+  // Get whitelist of mods from app settings.
+  const modWhitelist = (await context.settings.get("mod-whitelist")) as string;
+  // If whitelist is not empty, use that.
+  if (modWhitelist != undefined && modWhitelist.trim() != "") {
+    const whitelistedMods = modWhitelist.trim().split(',');
+    for (let i = 0; i < whitelistedMods.length; i++) {
+      const whiteListedUsername = whitelistedMods[i].trim();
+      // If mod is whitelisted, return false.
+      if (modUsername == whiteListedUsername) {
+        thisModIsIgnored = false;
+        break;
+      }
+    }
   }
-  //reached end of list, no match
-  return false;
+  // If whitelist is empty, use blacklist instead.
+  else {
+    const modBlacklist = (await context.settings.get("mod-blacklist")) as string;
+    // Only check blacklist if it is not empty.
+    if (modBlacklist != undefined && modBlacklist.trim() != "") {
+      const blacklistedMods = modBlacklist.trim().split(',');
+      for (let i = 0; i < blacklistedMods.length; i++) {
+        const blackListedUsername = blacklistedMods[i].trim();
+        // If mod is blacklisted, return true.
+        if (modUsername == blackListedUsername) {
+          thisModIsIgnored = true;
+          break;
+        }
+      }
+    }
+  }
+  return thisModIsIgnored;
 }
 
-// Helper function for verifying if post title includes a title keyword in the list in the config settings
-function containsTitle(title: string, titleList: string) {
-  title = title.trim(); //trim unneeded white space
-  var titles = titleList.split(","); //separate title keywords in list
-  for (let i = 0; i < titles.length; i++) {
-    titles[i] = titles[i].trim(); //for each title keywords in the list, trim white space as well
-    if (title.includes(titles[i])) //check if titles match
-      return true;
-  }
-  //reached end of list, no match
-  return false;
+// Helper function for determining if a mod action is done by an admin.
+async function userIsAdmin(username: string, context: TriggerContext) {
+  // Return false for invalid username.
+  if (username == undefined || username == "") return false;
+  const user = await context.reddit.getUserByUsername(username);
+  // Return false if user not found.
+  if (!user) return false;
+  // If valid user, return isAdmin property.
+  return user.isAdmin;
 }
 
 export default Devvit;
