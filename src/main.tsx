@@ -18,7 +18,7 @@ Devvit.configure({
 
 
 Devvit.addSettings([
-  // Config setting for post lock
+  // Config setting for locking of removed posts
   {
     type: "boolean",
     name: "enable-post-lock",
@@ -26,6 +26,16 @@ Devvit.addSettings([
     defaultValue: true,
     helpText:
       "If enabled, posts will be locked automatically when they are removed.",
+    scope: "installation",
+  },
+  // Config setting for locking of deleted posts
+  {
+    type: "boolean",
+    name: "enable-lock-deleted",
+    label: "Lock deleted posts",
+    defaultValue: true,
+    helpText:
+      "If enabled, posts will be locked automatically when they are deleted by the Original Poster.",
     scope: "installation",
   },
   // Config setting for post unlock
@@ -41,11 +51,11 @@ Devvit.addSettings([
   // Config setting for comment lock
   /*{
     type: "boolean",
-    name: "enable-post-lock",
-    label: "Enable locking of removed posts",
+    name: "enable-comment-lock",
+    label: "Enable locking of removed comments",
     defaultValue: true,
     helpText:
-      "If enabled, removed posts will be locked automatically.",
+      "If enabled, removed comments will be locked automatically.",
     scope: "installation",
   },*/
   // Config setting for enabling locking of all pinned posts when unpinned
@@ -130,7 +140,7 @@ Devvit.addTrigger({
   event: 'ModAction',
   onEvent: async (event, context) => {
     // Check if the mod action is a post removal.
-    if (event.action === 'removelink') {
+    if (event.action === 'removelink' || event.action === 'spamlink') {
       // Check if the setting for post lock is enabled.
       if (await context.settings.get("enable-post-lock")) {
         if (event.targetPost?.isLocked!) return; // If the post is already locked, do nothing.
@@ -140,7 +150,7 @@ Devvit.addTrigger({
         if (thisModIsIgnored) return; // If this mod is ignored, do nothing.
         // All conditions met. Proceed with post lock.
         const thisPost = await context.reddit.getPostById(event.targetPost?.id!);
-        thisPost.lock();
+        if (thisPost) await thisPost.lock();
         //console.log('Is it locked?: ' + thisPost.isLocked().toString())
       }
     }
@@ -151,10 +161,36 @@ Devvit.addTrigger({
         if (!(event.targetPost?.isLocked!)) return; // If the post is already unlocked, do nothing.
         // All conditions met. Proceed with post unlock.
         const thisPost = await context.reddit.getPostById(event.targetPost?.id!);
-        thisPost.unlock();
+        if (thisPost) await thisPost.unlock();
       }
     }
   }
+});
+
+// Trigger handler for when post is deleted by user instead of removed by mod/admin
+Devvit.addTrigger({
+  event: "PostDelete",
+  onEvent: async (event, context) => {
+    const eventSource = event.source.valueOf(); // 3 = mod; 2 = admin; 1 = user; 0 = unknown; -1 = unrecognized
+    if (eventSource == 1) { // Post was deleted by its author.
+      if (await context.settings.get("enable-lock-deleted")) { // If setting is enabled, lock post.
+        const thisPost = await context.reddit.getPostById(event.postId!);
+        if (thisPost) await thisPost.lock();
+      }
+    }
+  },
+});
+
+// Trigger handler for when post is filtered by automod
+Devvit.addTrigger({
+  event: "AutomoderatorFilterPost",
+  onEvent: async (event, context) => {
+    // If "ignore-automod" setting is enabled, do nothing.
+    if (await context.settings.get("ignore-automod")) return;
+    // Else, lock post.
+    const thisPost = await context.reddit.getPostById(event.post?.id!);
+    if (thisPost) await thisPost.lock();
+  },
 });
 
 // Helper function to determine if action by a certain mod is ignored

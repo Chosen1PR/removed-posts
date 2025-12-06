@@ -3,7 +3,8 @@
   "blocks": {
     "entry": "src/main.tsx",
     "triggers": [
-      "onModAction"
+      "onModAction",
+      "onPostDelete"
     ]
   },
   "dev": {
