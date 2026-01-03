@@ -1,21 +1,16 @@
 // Learn more at developers.reddit.com/docs
 import {
-  //CommentCreate,
-  //CommentCreateDefinition,
-  //CommentDelete,
   Devvit,
-  //MenuItemOnPressEvent,
-  //Post,
-  //SettingScope,
-  TriggerContext,
-  //User,
-  //useState,
 } from "@devvit/public-api";
+
+import {
+  modIsIgnored,
+  nukeComments
+} from "./utils.js";
 
 Devvit.configure({
   redditAPI: true,
 });
-
 
 Devvit.addSettings([
   // Config setting for locking of removed posts
@@ -48,16 +43,6 @@ Devvit.addSettings([
       "If enabled, posts will be unlocked automatically when they are approved by any mod/admin.",
     scope: "installation",
   },
-  // Config setting for comment lock
-  /*{
-    type: "boolean",
-    name: "enable-comment-lock",
-    label: "Enable locking of removed comments",
-    defaultValue: true,
-    helpText:
-      "If enabled, removed comments will be locked automatically.",
-    scope: "installation",
-  },*/
   // Config setting for enabling locking of all pinned posts when unpinned
   {
     type: "group",
@@ -104,7 +89,6 @@ Devvit.addSettings([
         helpText:
           `Comma (,) separated list of moderator usernames. Posts removed by these mods will be ignored. ` +
           `This setting is ignored if the allowlist is not empty.`,
-        //lineHeight: 3,
         defaultValue: "",
         scope: "installation",
       },
@@ -114,13 +98,23 @@ Devvit.addSettings([
         name: "mod-whitelist",
         label: "Mod allowlist",
         helpText:
-          `Comma (,) separated list of moderator usernames. Only posts removed by these mods will be actioned. ` +
+          `Comma (,) separated list of moderator usernames. Only posts removed by these mods will be locked. ` +
           `Overrides the blocklist above.`,
-        //lineHeight: 3,
         defaultValue: "",
         scope: "installation",
       }
     ]
+  },
+  // Config setting for nuking comments on spam posts
+  {
+    type: "boolean",
+    name: "nuke-comments",
+    label: "Remove all comments on spam posts (WARNING: CAUTION ADVISED)",
+    defaultValue: false,
+    helpText:
+      "If enabled, posts that are marked as spam will have all their comments removed, except for top-level distinguished mod comments. " +
+      "Only works if post locking is also enabled. This action is NOT easily reversible for posts with many comments; caution is advised.",
+    scope: "installation",
   },
 ]);
 
@@ -131,7 +125,7 @@ Devvit.addMenuItem({
   location: "subreddit",
   forUserType: "moderator",
   onPress: async (event, context) => {
-    context.ui.navigateTo(`https://developers.reddit.com/r/${context.subredditName!}/apps/removed-posts`);
+    context.ui.navigateTo(`https://developers.reddit.com/r/${context.subredditName!}/apps/${context.appName}`);
   },
 });
 
@@ -150,8 +144,15 @@ Devvit.addTrigger({
         if (thisModIsIgnored) return; // If this mod is ignored, do nothing.
         // All conditions met. Proceed with post lock.
         const thisPost = await context.reddit.getPostById(event.targetPost?.id!);
-        if (thisPost) await thisPost.lock();
-        //console.log('Is it locked?: ' + thisPost.isLocked().toString())
+        if (thisPost) {
+          if (!thisPost.isLocked()) await thisPost.lock();
+          if (event.action === 'spamlink') {
+            // If action is spamlink, check if we need to nuke comments.
+            if (await context.settings.get("nuke-comments")) {
+              await nukeComments(thisPost);
+            }
+          }
+        }
       }
     }
     // Check if the mod action is a post approval.
@@ -161,7 +162,9 @@ Devvit.addTrigger({
         if (!(event.targetPost?.isLocked!)) return; // If the post is already unlocked, do nothing.
         // All conditions met. Proceed with post unlock.
         const thisPost = await context.reddit.getPostById(event.targetPost?.id!);
-        if (thisPost) await thisPost.unlock();
+        if (thisPost) {
+          if (thisPost.isLocked()) await thisPost.unlock();
+        }
       }
     }
   }
@@ -175,7 +178,9 @@ Devvit.addTrigger({
     if (eventSource == 1) { // Post was deleted by its author.
       if (await context.settings.get("enable-lock-deleted")) { // If setting is enabled, lock post.
         const thisPost = await context.reddit.getPostById(event.postId!);
-        if (thisPost) await thisPost.lock();
+        if (thisPost) {
+          if (!thisPost.isLocked()) await thisPost.lock();
+        }
       }
     }
   },
@@ -189,70 +194,10 @@ Devvit.addTrigger({
     if (await context.settings.get("ignore-automod")) return;
     // Else, lock post.
     const thisPost = await context.reddit.getPostById(event.post?.id!);
-    if (thisPost) await thisPost.lock();
+    if (thisPost) {
+      if (!thisPost.isLocked()) await thisPost.lock();
+    }
   },
 });
-
-// Helper function to determine if action by a certain mod is ignored
-async function modIsIgnored(modUsername: string, context: TriggerContext) {
-  // For invalid mod username, return true.
-  if (modUsername == undefined || modUsername == "")
-    return true;
-  // For posts filtered by Reddit, return the value of the app setting.
-  else if (modUsername == "reddit")
-    return (await context.settings.get("ignore-ureddit")) as boolean;
-  // For AutoModerator, return the value of the app setting.
-  else if (modUsername == "AutoModerator")
-    return (await context.settings.get("ignore-automod")) as boolean;
-  // Admin check
-  if (await context.settings.get("ignore-admins"))
-    // If the "ignore-admins" setting is on, return the output of the userIsAdmin method,
-    // which will tell us if the mod is an admin.
-    return (await userIsAdmin(modUsername, context));
-  // Base conditions satisfied.
-  var thisModIsIgnored = false;
-  // Get whitelist of mods from app settings.
-  const modWhitelist = (await context.settings.get("mod-whitelist")) as string;
-  // If whitelist is not empty, use that.
-  if (modWhitelist != undefined && modWhitelist.trim() != "") {
-    const whitelistedMods = modWhitelist.trim().split(',');
-    for (let i = 0; i < whitelistedMods.length; i++) {
-      const whiteListedUsername = whitelistedMods[i].trim();
-      // If mod is whitelisted, return false.
-      if (modUsername == whiteListedUsername) {
-        thisModIsIgnored = false;
-        break;
-      }
-    }
-  }
-  // If whitelist is empty, use blacklist instead.
-  else {
-    const modBlacklist = (await context.settings.get("mod-blacklist")) as string;
-    // Only check blacklist if it is not empty.
-    if (modBlacklist != undefined && modBlacklist.trim() != "") {
-      const blacklistedMods = modBlacklist.trim().split(',');
-      for (let i = 0; i < blacklistedMods.length; i++) {
-        const blackListedUsername = blacklistedMods[i].trim();
-        // If mod is blacklisted, return true.
-        if (modUsername == blackListedUsername) {
-          thisModIsIgnored = true;
-          break;
-        }
-      }
-    }
-  }
-  return thisModIsIgnored;
-}
-
-// Helper function for determining if a mod action is done by an admin.
-async function userIsAdmin(username: string, context: TriggerContext) {
-  // Return false for invalid username.
-  if (username == undefined || username == "") return false;
-  const user = await context.reddit.getUserByUsername(username);
-  // Return false if user not found.
-  if (!user) return false;
-  // If valid user, return isAdmin property.
-  return user.isAdmin;
-}
 
 export default Devvit;
