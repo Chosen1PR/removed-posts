@@ -7,6 +7,9 @@
       "onPostDelete"
     ]
   },
+  "marketingAssets": {
+    "icon": "assets/lrp-icon.png"
+  },
   "dev": {
     "subreddit": "CapitalOneBank"
   }

@@ -13,6 +13,10 @@ This app locks posts automatically when they are removed by a moderator or delet
 
 ## Changelog
 
+### [1.0.1] (2026-01-12)
+
+- New app icon.
+
 ### [1.0.0] (2026-01-02)
 
 #### Features
