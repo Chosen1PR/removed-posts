@@ -7,13 +7,13 @@ This app locks posts automatically when they are removed by a moderator or delet
 - Optionally ignore posts removed by AutoModerator.
 - Define a blocklist of mods. Posts removed by these mods will not be locked automatically.
 - Define an allowlist of mods (which overrides the blocklist) if only posts removed by certain mods should be locked.
-- Optionally remove all comments for posts marked as spam.
+- Optionally remove all comments for posts marked as spam. This action is not easily reversible, so caution is advised.
 
 ---
 
 ## Changelog
 
-### [1.0.1] (2026-01-12)
+### [1.0.2] (2026-01-12)
 
 - New app icon.
 
@@ -21,7 +21,7 @@ This app locks posts automatically when they are removed by a moderator or delet
 
 #### Features
 
-- Added the ability to remove all comments on posts marked as spam. This action is not easily reversible, so caution is advised.
+- Added the ability to remove all comments on posts marked as spam.
 - Bumped major version.
 
 ### [0.0.10] (2025-12-06)
