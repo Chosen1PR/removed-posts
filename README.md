@@ -13,6 +13,12 @@ This app locks posts automatically when they are removed by a moderator or delet
 
 ## Changelog
 
+### [1.0.3] (2026-01-18)
+
+#### Bug Fixes
+
+- Fixed a bug where marking a post as spam would not remove its comments if it was already locked, even if the setting was enabled.
+
 ### [1.0.2] (2026-01-12)
 
 - New app icon.

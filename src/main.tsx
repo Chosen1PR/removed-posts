@@ -4,7 +4,7 @@ import {
 } from "@devvit/public-api";
 
 import {
-  modIsIgnored,
+  isModIgnored,
   nukeComments
 } from "./utils.js";
 
@@ -135,28 +135,28 @@ Devvit.addTrigger({
   onEvent: async (event, context) => {
     // Check if the mod action is a post removal.
     if (event.action === 'removelink' || event.action === 'spamlink') {
-      // Check if the setting for post lock is enabled.
+      // Check if we need to lock the post.
       if (await context.settings.get("enable-post-lock")) {
-        if (event.targetPost?.isLocked!) return; // If the post is already locked, do nothing.
-        // Check mod username.
+        // Check which mod performed the action.
         const modUsername = event.moderator?.name!;
-        const thisModIsIgnored = await modIsIgnored(modUsername, context);
-        if (thisModIsIgnored) return; // If this mod is ignored, do nothing.
-        // All conditions met. Proceed with post lock.
-        const thisPost = await context.reddit.getPostById(event.targetPost?.id!);
-        if (thisPost) {
-          if (!thisPost.isLocked()) await thisPost.lock();
-          if (event.action === 'spamlink') {
-            // If action is spamlink, check if we need to nuke comments.
-            if (await context.settings.get("nuke-comments")) {
-              await nukeComments(thisPost);
+        const thisModIsIgnored = await isModIgnored(modUsername, context);
+        if (!thisModIsIgnored) {
+          // All conditions met. Proceed with post lock.
+          const thisPost = await context.reddit.getPostById(event.targetPost?.id!);
+          if (thisPost) {
+            if (!thisPost.isLocked()) await thisPost.lock();
+            if (event.action === 'spamlink') {
+              // If action is spamlink, check if we need to nuke comments.
+              if (await context.settings.get("nuke-comments")) {
+                await nukeComments(thisPost);
+              }
             }
           }
         }
       }
     }
     // Check if the mod action is a post approval.
-    else if (event.action === 'approvelink') {
+    if (event.action === 'approvelink') {
       // Check if the setting for post unlock is enabled.
       if (await context.settings.get("enable-post-unlock")) {
         if (!(event.targetPost?.isLocked!)) return; // If the post is already unlocked, do nothing.

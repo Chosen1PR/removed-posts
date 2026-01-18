@@ -5,7 +5,7 @@ import {
 } from "@devvit/public-api";
 
 // Helper function to determine if action by a certain mod is ignored
-export async function modIsIgnored(modUsername: string, context: TriggerContext) {
+export async function isModIgnored(modUsername: string, context: TriggerContext) {
   // For invalid mod username, return true.
   if (modUsername == undefined || modUsername == "")
     return true;
