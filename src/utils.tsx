@@ -72,7 +72,8 @@ export async function nukeComments(post: Post) {
   if (!post) return;
   const comments = await post.comments.all();
   for (const comment of comments) {
-    if (!comment.isRemoved() && !comment.isDistinguished()) // Skip top-level distinguished mod comments
+    // Skip top-level distinguished mod comments and pinned comments, but remove all other comments.
+    if (!comment.isRemoved() && !comment.isDistinguished() && !comment.isStickied())
       await comment.remove();
     // Also remove child comments
     await removeChildComments(comment);

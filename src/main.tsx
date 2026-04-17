@@ -109,10 +109,10 @@ Devvit.addSettings([
   {
     type: "boolean",
     name: "nuke-comments",
-    label: "Remove all comments on spam posts (WARNING: CAUTION ADVISED)",
+    label: "Remove all comments on spam posts (CAUTION ADVISED)",
     defaultValue: false,
     helpText:
-      "If enabled, posts that are marked as spam will have all their comments removed, except for top-level distinguished mod comments. " +
+      "If enabled, posts that are marked as spam will have all their comments removed, except for pinned comments and top-level distinguished mod comments. " +
       "Only works if post locking is also enabled. This action is NOT easily reversible for posts with many comments; caution is advised.",
     scope: "installation",
   },
@@ -156,7 +156,7 @@ Devvit.addTrigger({
       }
     }
     // Check if the mod action is a post approval.
-    if (event.action === 'approvelink') {
+    else if (event.action === 'approvelink') {
       // Check if the setting for post unlock is enabled.
       if (await context.settings.get("enable-post-unlock")) {
         if (!(event.targetPost?.isLocked!)) return; // If the post is already unlocked, do nothing.
@@ -187,6 +187,7 @@ Devvit.addTrigger({
 });
 
 // Trigger handler for when post is filtered by automod
+/* 
 Devvit.addTrigger({
   event: "AutomoderatorFilterPost",
   onEvent: async (event, context) => {
@@ -199,5 +200,6 @@ Devvit.addTrigger({
     }
   },
 });
+*/
 
 export default Devvit;
