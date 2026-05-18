@@ -13,11 +13,19 @@ This app locks posts automatically when they are removed by a moderator or delet
 
 ## Changelog
 
+### [1.0.6] (2026-05-18)
+
+#### Features
+
+- App icon now appears as app account's avatar.
+- Updated app description on app profile page.
+- Updated Devvit CLI to 0.12.24.
+
 ### [1.0.5] (2026-04-17)
 
 #### Features
 
-- The option to remove all comments for spam posts now does NOT remove pinned comments, regardless of whether they are mod distinguished or not. Previously, in order for mod comments to *not* be removed, they *had* to be top-level and distinguished. Now, they can be pinned and not distinguished.
+- The option to remove all comments for spam posts now does NOT remove pinned comments, regardless of whether they are mod distinguished or not. Previously, in order for mod comments to *not* be removed, they had to be both top-level and distinguished. Now, they can be pinned and not distinguished.
 - Removed one unnecessary event trigger that *may* have been causing unintentional post locks. This bug fix is a work in progress.
 
 ### [1.0.3] (2026-01-18)
