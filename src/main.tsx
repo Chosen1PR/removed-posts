@@ -119,6 +119,8 @@ Devvit.addSettings([
 ]);
 
 // Button for config settings
+// Likely not necessary
+/*
 Devvit.addMenuItem({
   label: "Lock Removed Posts",
   description: "Settings",
@@ -128,6 +130,7 @@ Devvit.addMenuItem({
     context.ui.navigateTo(`https://developers.reddit.com/r/${context.subredditName!}/apps/${context.appSlug}`);
   },
 });
+*/
 
 // Trigger handler for when a mod action is performed on a post
 Devvit.addTrigger({

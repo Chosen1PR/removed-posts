@@ -13,6 +13,12 @@ This app locks posts automatically when they are removed by a moderator or delet
 
 ## Changelog
 
+### [1.0.7] (2026-06-03)
+
+- Removed the Settings menu item at subreddit level for a cleaner menu. Settings are still accessible from developers.reddit.com.
+- Updated Devvit CLI to 0.13.2.
+- Updated dependencies to address vulnerabilities.
+
 ### [1.0.6] (2026-05-18)
 
 #### Features
