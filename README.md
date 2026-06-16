@@ -3,7 +3,7 @@
 This app locks posts automatically when they are removed by a moderator or deleted by the poster. Additionally, mods can:
 
 - Enable or disable post locking at will without needing to uninstall the app.
-- Optionally unlock posts when they are approved by any mod.
+- Optionally unlock posts when they are approved.
 - Optionally ignore posts removed by AutoModerator.
 - Define a blocklist of mods. Posts removed by these mods will not be locked automatically.
 - Define an allowlist of mods (which overrides the blocklist) if only posts removed by certain mods should be locked.
@@ -13,10 +13,14 @@ This app locks posts automatically when they are removed by a moderator or delet
 
 ## Changelog
 
+### [1.0.8] (2026-06-16)
+
+- Applied the mod exemptions for post removals to approvals as well.
+- Fixed an issue that could cause the app to ignore all mods if the "Ignore admins" setting was enabled.
+
 ### [1.0.7] (2026-06-03)
 
 - Removed the Settings menu item at subreddit level for a cleaner menu. Settings are still accessible from developers.reddit.com.
-- Updated Devvit CLI to 0.13.2.
 - Updated dependencies to address vulnerabilities.
 
 ### [1.0.6] (2026-05-18)
@@ -25,7 +29,6 @@ This app locks posts automatically when they are removed by a moderator or delet
 
 - App icon now appears as app account's avatar.
 - Updated app description on app profile page.
-- Updated Devvit CLI to 0.12.24.
 
 ### [1.0.5] (2026-04-17)
 

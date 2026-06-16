@@ -40,7 +40,7 @@ Devvit.addSettings([
     label: "Unlock approved posts",
     defaultValue: false,
     helpText:
-      "If enabled, posts will be unlocked automatically when they are approved by any mod/admin.",
+      "If enabled, posts will be unlocked automatically when they are approved. Follows same Mod Settings below.",
     scope: "installation",
   },
   // Config setting for enabling locking of all pinned posts when unpinned
@@ -58,27 +58,27 @@ Devvit.addSettings([
         label: "Ignore posts filtered by Reddit",
         defaultValue: true,
         helpText:
-          "If enabled, posts filtered or removed by u/reddit will not be locked.",
+          "If enabled, posts filtered, removed, or approved by u/reddit will not be locked/unlocked.",
         scope: "installation",
       },
       // Config setting to ignore automod
       {
         type: "boolean",
         name: "ignore-automod",
-        label: "Ignore posts filtered/removed by AutoModerator",
+        label: "Ignore posts actioned by AutoModerator",
         defaultValue: true,
         helpText:
-          "If enabled, posts filtered or removed by AutoModerator will not be locked.",
+          "If enabled, posts filtered, removed, or approved by AutoModerator will not be locked/unlocked.",
         scope: "installation",
       },
       // Config setting to ignore admins
       {
         type: "boolean",
         name: "ignore-admins",
-        label: "Ignore posts removed by Admins",
+        label: "Ignore posts actioned by Admins",
         defaultValue: false,
         helpText:
-          "If enabled, posts removed by site Admins will not be locked.",
+          "If enabled, posts removed or approved by Reddit Admins will not be locked/unlocked.",
         scope: "installation",
       },
       // Config setting for list of blacklisted mods
@@ -87,7 +87,7 @@ Devvit.addSettings([
         name: "mod-blacklist",
         label: "Mod blocklist",
         helpText:
-          `Comma (,) separated list of moderator usernames. Posts removed by these mods will be ignored. ` +
+          `Comma (,) separated list of moderator usernames. Posts removed/approved by these mods will be ignored. ` +
           `This setting is ignored if the allowlist is not empty.`,
         defaultValue: "",
         scope: "installation",
@@ -98,7 +98,7 @@ Devvit.addSettings([
         name: "mod-whitelist",
         label: "Mod allowlist",
         helpText:
-          `Comma (,) separated list of moderator usernames. Only posts removed by these mods will be locked. ` +
+          `Comma (,) separated list of moderator usernames. Only posts removed/approved by these mods will be locked/unlocked. ` +
           `Overrides the blocklist above.`,
         defaultValue: "",
         scope: "installation",
@@ -139,18 +139,16 @@ Devvit.addTrigger({
     // Check if the mod action is a post removal.
     if (event.action === 'removelink' || event.action === 'spamlink') {
       // Check if we need to lock the post.
-      if (await context.settings.get("enable-post-lock")) {
+      if (await context.settings.get<boolean>("enable-post-lock")) {
         // Check which mod performed the action.
-        const modUsername = event.moderator?.name!;
-        const thisModIsIgnored = await isModIgnored(modUsername, context);
-        if (!thisModIsIgnored) {
+        if (!(await isModIgnored(event.moderator?.name!, context))) {
           // All conditions met. Proceed with post lock.
           const thisPost = await context.reddit.getPostById(event.targetPost?.id!);
           if (thisPost) {
             if (!thisPost.isLocked()) await thisPost.lock();
             if (event.action === 'spamlink') {
               // If action is spamlink, check if we need to nuke comments.
-              if (await context.settings.get("nuke-comments")) {
+              if (await context.settings.get<boolean>("nuke-comments")) {
                 await nukeComments(thisPost);
               }
             }
@@ -161,8 +159,9 @@ Devvit.addTrigger({
     // Check if the mod action is a post approval.
     else if (event.action === 'approvelink') {
       // Check if the setting for post unlock is enabled.
-      if (await context.settings.get("enable-post-unlock")) {
-        if (!(event.targetPost?.isLocked!)) return; // If the post is already unlocked, do nothing.
+      if (!(event.targetPost?.isLocked!)) return; // If the post is already unlocked, do nothing.
+      if (await context.settings.get<boolean>("enable-post-unlock")) {
+        if (await isModIgnored(event.moderator?.name!, context)) return; // If this mod is ignored, do nothing.
         // All conditions met. Proceed with post unlock.
         const thisPost = await context.reddit.getPostById(event.targetPost?.id!);
         if (thisPost) {
@@ -179,7 +178,7 @@ Devvit.addTrigger({
   onEvent: async (event, context) => {
     const eventSource = event.source.valueOf(); // 3 = mod; 2 = admin; 1 = user; 0 = unknown; -1 = unrecognized
     if (eventSource == 1) { // Post was deleted by its author.
-      if (await context.settings.get("enable-lock-deleted")) { // If setting is enabled, lock post.
+      if (await context.settings.get<boolean>("enable-lock-deleted")) { // If setting is enabled, lock post.
         const thisPost = await context.reddit.getPostById(event.postId!);
         if (thisPost) {
           if (!thisPost.isLocked()) await thisPost.lock();

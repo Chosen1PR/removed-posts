@@ -11,19 +11,21 @@ export async function isModIgnored(modUsername: string, context: TriggerContext)
     return true;
   // For posts filtered by Reddit, return the value of the app setting.
   else if (modUsername == "reddit")
-    return (await context.settings.get("ignore-ureddit")) as boolean;
+    return await context.settings.get<boolean>("ignore-ureddit") as boolean;
   // For AutoModerator, return the value of the app setting.
   else if (modUsername == "AutoModerator")
-    return (await context.settings.get("ignore-automod")) as boolean;
+    return await context.settings.get<boolean>("ignore-automod") as boolean;
+  
   // Admin check
-  if (await context.settings.get("ignore-admins"))
-    // If the "ignore-admins" setting is on, return the output of the userIsAdmin method,
-    // which will tell us if the mod is an admin.
-    return (await userIsAdmin(modUsername, context));
+  if (await context.settings.get<boolean>("ignore-admins")) {
+    // If the "ignore-admins" setting is on, get the output of the isModAdmin method,
+    // which will tell us if the mod is an admin. Return true if it's an admin.
+    if (await isModAdmin(modUsername, context)) return true;
+  }
   // Base conditions satisfied.
   var thisModIsIgnored = false;
   // Get whitelist of mods from app settings.
-  const modWhitelist = (await context.settings.get("mod-whitelist")) as string;
+  const modWhitelist = await context.settings.get<string>("mod-whitelist");
   // If whitelist is not empty, use that.
   if (modWhitelist != undefined && modWhitelist.trim() != "") {
     const whitelistedMods = modWhitelist.trim().split(',');
@@ -38,7 +40,7 @@ export async function isModIgnored(modUsername: string, context: TriggerContext)
   }
   // If whitelist is empty, use blacklist instead.
   else {
-    const modBlacklist = (await context.settings.get("mod-blacklist")) as string;
+    const modBlacklist = await context.settings.get<string>("mod-blacklist");
     // Only check blacklist if it is not empty.
     if (modBlacklist != undefined && modBlacklist.trim() != "") {
       const blacklistedMods = modBlacklist.trim().split(',');
@@ -56,7 +58,7 @@ export async function isModIgnored(modUsername: string, context: TriggerContext)
 }
 
 // Helper function for determining if a mod action is done by an admin.
-async function userIsAdmin(username: string, context: TriggerContext) {
+async function isModAdmin(username: string, context: TriggerContext) {
   // Return false for invalid username.
   if (username == undefined || username == "") return false;
   // Fetch user by username.
