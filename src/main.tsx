@@ -55,7 +55,7 @@ Devvit.addSettings([
       {
         type: "boolean",
         name: "ignore-ureddit",
-        label: "Ignore posts filtered/unfiltered by Reddit",
+        label: "Ignore posts filtered by Reddit",
         defaultValue: true,
         helpText:
           "If enabled, posts filtered, removed, or approved by u/reddit will not be locked/unlocked.",
