@@ -1,14 +1,92 @@
 {
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
   "name": "removed-posts",
-  "blocks": {
-    "entry": "src/main.tsx",
-    "triggers": [
-      "onModAction",
-      "onPostDelete"
-    ]
+  "permissions": {
+    "http": {
+      "enable": false
+    },
+    "media": false,
+    "realtime": false,
+    "redis": false,
+    "reddit": {
+      "enable": true
+    }
+  },
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.cjs"
+  },
+  "settings": {
+    "subreddit": {
+      "enable-post-lock": {
+        "type": "boolean",
+        "label": "Lock removed posts",
+        "helpText": "If enabled, posts will be locked automatically when they are removed.",
+        "defaultValue": true
+      },
+      "enable-lock-deleted": {
+        "type": "boolean",
+        "label": "Lock deleted posts",
+        "helpText": "If enabled, posts will be locked automatically when they are deleted by the Original Poster.",
+        "defaultValue": true
+      },
+      "enable-post-unlock": {
+        "type": "boolean",
+        "label": "Unlock approved posts",
+        "helpText": "If enabled, posts will be unlocked automatically when they are approved. Follows same Mod Settings below.",
+        "defaultValue": true
+      },
+      "mod-settings": {
+        "type": "group",
+        "label": "Mod Settings",
+        "helpText": "Please omit any leading \"u/\" in the below settings (e.g., removed-posts, not u/removed-posts) or leave blank to disable.",
+        "fields": {
+          "ignore-ureddit": {
+            "type": "boolean",
+            "label": "Ignore posts filtered by Reddit",
+            "helpText": "If enabled, posts filtered, removed, or approved by u/reddit will not be locked/unlocked.",
+            "defaultValue": true
+          },
+          "ignore-automod": {
+            "type": "boolean",
+            "label": "Ignore posts actioned by AutoModerator",
+            "helpText": "If enabled, posts filtered, removed, or approved by AutoModerator will not be locked/unlocked.",
+            "defaultValue": true
+          },
+          "ignore-admins": {
+            "type": "boolean",
+            "label": "Ignore posts actioned by Admins",
+            "helpText": "If enabled, posts removed or approved by Reddit Admins will not be locked/unlocked.",
+            "defaultValue": false
+          },
+          "mod-blacklist": {
+            "type": "paragraph",
+            "label": "Mod blocklist",
+            "helpText": "Comma (,) separated list of moderator usernames. Posts removed/approved by these mods will be ignored. This setting is ignored if the allowlist is not empty.",
+            "defaultValue": ""
+          },
+          "mod-whitelist": {
+            "type": "paragraph",
+            "label": "Mod allowlist",
+            "helpText": "Comma (,) separated list of moderator usernames. Only posts removed/approved by these mods will be locked/unlocked. Overrides the blocklist above.",
+            "defaultValue": ""
+          }
+        }
+      },
+      "nuke-comments": {
+        "type": "boolean",
+        "label": "Remove all comments on spam posts (CAUTION ADVISED)",
+        "helpText": "If enabled, posts that are marked as spam will have all their comments removed, except for pinned comments and top-level distinguished mod comments. Only works if post locking is also enabled. This action is NOT easily reversible for posts with many comments; caution is advised.",
+        "defaultValue": false
+      }
+    }
+  },
+  "triggers": {
+    "onModAction": "/internal/triggers/on-mod-action",
+    "onPostDelete": "/internal/triggers/on-post-delete"
   },
   "marketingAssets": {
-    "icon": "assets/lrp-icon.png"
+    "icon": "assets/rp-icon.png"
   },
   "dev": {
     "subreddit": "CapitalOneBank"

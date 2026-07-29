@@ -4,14 +4,18 @@ This app locks posts automatically when they are removed by a moderator or delet
 
 - Enable or disable post locking at will without needing to uninstall the app.
 - Optionally unlock posts when they are approved.
-- Optionally ignore posts removed by AutoModerator.
-- Define a blocklist of mods. Posts removed by these mods will not be locked automatically.
-- Define an allowlist of mods (which overrides the blocklist) if only posts removed by certain mods should be locked.
+- Optionally ignore posts removed or approved by AutoModerator, Reddit filters, and/or admins.
+- Define a blocklist of mods. Posts removed or approved by these mods will not be locked/unlocked automatically.
+- Define an allowlist of mods (which overrides the blocklist) if only posts removed or approved by certain mod(s) should be locked/unlocked.
 - Optionally remove all comments for posts marked as spam. This action is not easily reversible, so caution is advised.
 
 ---
 
 ## Changelog
+
+### [1.1.0] (2026-07-28)
+
+- Rewrote entire app using Devvit Web for better maintainability. No feature changes.
 
 ### [1.0.8] (2026-06-16)
 
