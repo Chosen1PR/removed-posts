@@ -17,6 +17,14 @@
     "entry": "index.cjs"
   },
   "settings": {
+    "global": {
+      "comment-rr-delay": {
+        "type": "number",
+        "label": "Comment removal reason delay",
+        "helpText": "Amount of time (in seconds) the app should wait after a removal reason is added to a comment so that a mod-distinguished reply can post.",
+        "defaultValue": 3
+      }
+    },
     "subreddit": {
       "enable-post-lock": {
         "type": "boolean",
@@ -73,11 +81,23 @@
           }
         }
       },
-      "nuke-comments": {
-        "type": "boolean",
-        "label": "Remove all comments on spam posts (CAUTION ADVISED)",
-        "helpText": "If enabled, posts that are marked as spam will have all their comments removed, except for pinned comments and top-level distinguished mod comments. Only works if post locking is also enabled. This action is NOT easily reversible for posts with many comments; caution is advised.",
-        "defaultValue": false
+      "comment-settings": {
+        "type": "group",
+        "label": "Comment Settings",
+        "fields": {
+          "nuke-comments": {
+            "type": "boolean",
+            "label": "Remove all comments on spam posts (CAUTION ADVISED)",
+            "helpText": "If enabled, posts that are marked as spam will have all their comments removed, except for pinned comments and top-level distinguished mod comments. Only works if post locking is also enabled. This action is NOT easily reversible for posts with many comments; caution is advised.",
+            "defaultValue": false
+          },
+          "lock-comments-on-rr": {
+            "type": "boolean",
+            "label": "Lock removed comments when a removal reason and mod reply are added",
+            "helpText": "If enabled, when a removal reason is added to a removed comment, after a very brief delay, the app will check if that comment has a mod-distinguished reply. If it does, it will lock the removed comment. This prevents users from being able to reply to their own removed comments to get around locked mod comments.",
+            "defaultValue": false
+          }
+        }
       }
     }
   },

@@ -11,10 +11,11 @@ import {
   getRequestBodyValueAsBoolean,
   getRequestBodyValueAsNumber,
   isModIgnored,
-  nukeComments
+  nukeComments,
+  delay
 } from "./utils.js";
 
-import { PostId } from "./types.js"
+import { PostId, CommentId } from "./types.js"
 
 const app = express();
 
@@ -29,15 +30,15 @@ const router = express.Router();
 
 // Trigger handler for mod action
 router.post('/internal/triggers/on-mod-action', async (req, res): Promise<void> => {
-  const action = getRequestBodyValue(req.body, ['action']) ?? '',
-  modName = getRequestBodyValue(req.body, ['moderator', 'name']) ?? '',
-  targetPostId = getRequestBodyValue(req.body, ['targetPost', 'id']) ?? '',
+  const action = getRequestBodyValue(req.body, ['action']),
+  modName = getRequestBodyValue(req.body, ['moderator', 'name']),
+  targetPostId = getRequestBodyValue(req.body, ['targetPost', 'id']),
   targetPostIsLocked = getRequestBodyValueAsBoolean(req.body, ['targetPost', 'isLocked']);
   try {
     // Check if the mod action is a post removal.
     if (action === 'removelink' || action === 'spamlink') {
       // Check if we need to lock the post.
-      if (await settings.get<boolean>("enable-post-lock")) {
+      if (await settings.get<boolean>('enable-post-lock')) {
         // Check which mod performed the action.
         if (!(await isModIgnored(modName))) {
           // All conditions met. Proceed with post lock.
@@ -46,7 +47,7 @@ router.post('/internal/triggers/on-mod-action', async (req, res): Promise<void> 
             if (!thisPost.isLocked()) await thisPost.lock();
             if (action === 'spamlink') {
               // If action is spamlink, check if we need to nuke comments.
-              if (await settings.get<boolean>("nuke-comments")) {
+              if (await settings.get<boolean>('nuke-comments')) {
                 await nukeComments(thisPost);
               }
             }
@@ -58,12 +59,37 @@ router.post('/internal/triggers/on-mod-action', async (req, res): Promise<void> 
     else if (action === 'approvelink') {
       // Check if the setting for post unlock is enabled.
       if (!targetPostIsLocked) return; // If the post is already unlocked, do nothing.
-      if (await settings.get<boolean>("enable-post-unlock")) {
+      if (await settings.get<boolean>('enable-post-unlock')) {
         if (await isModIgnored(modName)) return; // If this mod is ignored, do nothing.
         // All conditions met. Proceed with post unlock.
         const thisPost = await reddit.getPostById(targetPostId as PostId);
         if (thisPost) {
           if (thisPost.isLocked()) await thisPost.unlock();
+        }
+      }
+    }
+    // Check if the mod action is the addition of a removal reason to a removed comment.
+    else if (action === 'addremovalreason') {
+      const commentId = getRequestBodyValue(req.body, ['targetComment', 'id']),
+      commentIsLocked = getRequestBodyValueAsBoolean(req.body, ['targetComment', 'isLocked']);
+      // If a removal reason was added to a comment (not a post) and the comment is not locked:
+      if (commentId != '' && !commentIsLocked) {
+        // If the setting is on to lock removed comments:
+        if (await settings.get<boolean>('lock-comments-on-rr')) {
+          // Wait some time for a mod-distinguished comment to post.
+          await delay(await settings.get<number>('comment-rr-delay') ?? 3);
+          const targetComment = await reddit.getCommentById(commentId as CommentId);
+          if (targetComment) {
+            const replies = await targetComment.replies.all();
+            if (replies) {
+              for (const reply of replies) {
+                if (reply.isDistinguished()) { // If there is a reply from a mod
+                  await targetComment.lock(); // Lock target comment
+                  break;
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -81,7 +107,7 @@ router.post('/internal/triggers/on-post-delete', async (req, res): Promise<void>
   postId = getRequestBodyValue(req.body, ['postId']);
   try {
     if (source == 1) { // Post was deleted by its author.
-      if (await settings.get<boolean>("enable-lock-deleted")) { // If setting is enabled, lock post.
+      if (await settings.get<boolean>('enable-lock-deleted')) { // If setting is enabled, lock post.
         const thisPost = await reddit.getPostById(postId as PostId);
         if (thisPost) {
           if (!thisPost.isLocked()) await thisPost.lock();
