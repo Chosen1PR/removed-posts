@@ -1,6 +1,6 @@
 ## Features
 
-This app locks posts automatically when they are removed by a moderator or deleted by the poster, which prevents further comment activity on those posts. Comment sections on removed or deleted posts can sometimes devolve into toxic arguments or become a breeding ground for spam. With this app, mods can rest easier knowing that once a post is no longer visible on their subreddit, there will be no future comments on them. The full feature list is below.
+This app locks posts automatically when they are removed by a moderator or deleted by the poster, which prevents further comment activity on those posts. Comment sections on removed or deleted posts can sometimes devolve into toxic arguments or become a breeding ground for spam. With this app, mods can rest easier knowing that once a post is no longer visible on their subreddit, there will be no future comments on it. The full feature list is below.
 
 - Enable or disable post locking at will without needing to uninstall the app.
 - Optionally unlock posts when they are approved.
@@ -14,7 +14,7 @@ This app locks posts automatically when they are removed by a moderator or delet
 
 ## Changelog
 
-### [1.1.2] (2026-09-05)
+### [1.1.3] (2026-09-05)
 
 - Added a setting to lock removed comments when a removal reason and mod-distinguished reply are added.
 
