@@ -14,6 +14,10 @@ This app locks posts automatically when they are removed by a moderator or delet
 
 ## Changelog
 
+### [1.1.4] (2026-09-07)
+
+- Changed the default for the setting introduced in the last update to `false`.
+
 ### [1.1.3] (2026-09-05)
 
 - Added a setting to lock removed comments when a removal reason and mod-distinguished reply are added.

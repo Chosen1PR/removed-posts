@@ -95,7 +95,7 @@
             "type": "boolean",
             "label": "Lock removed comments when a removal reason and mod reply are added",
             "helpText": "If enabled, when a removal reason is added to a removed comment, after a very brief delay, the app will check if that comment has a mod-distinguished reply. If it does, it will lock the removed comment. This prevents users from being able to reply to their own removed comments to get around locked mod replies.",
-            "defaultValue": true
+            "defaultValue": false
           }
         }
       }
