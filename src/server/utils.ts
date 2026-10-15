@@ -13,8 +13,8 @@ export async function isModIgnored(modUsername: string) {
   // For posts filtered by Reddit, return the value of the app setting.
   else if (modUsername == "reddit")
     return await settings.get<boolean>("ignore-ureddit") as boolean;
-  // For AutoModerator, return the value of the app setting.
-  else if (modUsername == "AutoModerator")
+  // For Automod, return the value of the app setting.
+  else if (modUsername == "AutoModerator" || modUsername == "automod-neo")
     return await settings.get<boolean>("ignore-automod") as boolean;
   // Admin check
   if (await settings.get<boolean>("ignore-admins")) {

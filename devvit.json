@@ -57,8 +57,8 @@
           },
           "ignore-automod": {
             "type": "boolean",
-            "label": "Ignore posts actioned by AutoModerator",
-            "helpText": "If enabled, posts filtered, removed, or approved by AutoModerator will not be locked/unlocked.",
+            "label": "Ignore posts actioned by Automod",
+            "helpText": "If enabled, posts filtered, removed, or approved by u/AutoModerator or u/automod-neo will not be locked/unlocked.",
             "defaultValue": true
           },
           "ignore-admins": {
